@@ -1,0 +1,120 @@
+@startuml Mision_Emprende_Deployment
+
+skinparam nodeFontSize 13
+skinparam defaultFontName Arial
+skinparam backgroundColor #FAFAFA
+skinparam node {
+  BorderColor #444444
+  BackgroundColor #FFFDE7
+}
+
+title Diagrama de Despliegue — Misión Emprende UDD\nCertamen II + Examen Big Data
+
+' ===================== CLIENTE =====================
+node "Cliente (Navegador)" as browser #LightBlue {
+  artifact "HTML / CSS / JS"
+}
+
+' ===================== AWS us-east-1 (Primaria) =====================
+node "AWS us-east-1\n(Región Primaria)" as useast1 #LightYellow {
+
+  node "Amazon CloudFront\n(CDN / HTTPS)" as cf {
+    artifact "Distribución CF\nOrigen: S3 Frontend"
+  }
+
+  node "Amazon S3\nFrontend" as s3fe {
+    artifact "index.html\nCSS, JS"
+  }
+
+  node "Amazon S3\nMultimedia" as s3mm {
+    artifact "Imágenes LEGO\nVideos"
+  }
+
+  node "Amazon API Gateway\n(HTTP API)" as apigw {
+    artifact "Rutas HTTP /api/*"
+  }
+
+  node "AWS Lambda Pool" as lambdapool {
+    artifact "λ Acceso"
+    artifact "λ Profesor"
+    artifact "λ Sesiones"
+    artifact "λ Fase 1"
+    artifact "λ Fase 2"
+    artifact "λ Fase 3"
+    artifact "λ Fase 4"
+    artifact "λ Fase 5"
+  }
+
+  node "Amazon DynamoDB\n(Primaria)" as dynamo_primary #LightGreen {
+    artifact "MisionEmprende-prod\n[PK, SK, GSI1PK, GSI1SK]"
+  }
+
+  node "Amazon S3\nData Lake" as s3dl {
+    artifact "DynamoDB Export\n(JSON/Parquet)"
+  }
+
+  node "AWS Athena" as athena {
+    artifact "mision_emprende_db\nSQL sobre S3"
+  }
+
+  node "Dashboard" as dash {
+    artifact "KPIs visualizados\nChart.js / QuickSight"
+  }
+
+  node "AWS CloudWatch" as cw {
+    artifact "Logs estructurados\nMétricas Lambda"
+  }
+
+}
+
+' ===================== AWS us-west-2 (Réplica) =====================
+node "AWS us-west-2\n(Región Réplica)" as uswest2 #MistyRose {
+
+  node "Amazon DynamoDB\n(Réplica)" as dynamo_replica #Salmon {
+    artifact "MisionEmprende-prod\n[réplica Global Tables]"
+  }
+
+}
+
+' ===================== IaC =====================
+node "Máquina de Despliegue" as devops #LightGray {
+  artifact "main.tf  (Terraform >= 1.8)"
+  artifact "ansible/deploy.yml  (Ansible >= 2.17)"
+  artifact "template.yaml  (AWS SAM)"
+}
+
+' ===================== RELACIONES =====================
+browser --> cf : HTTPS
+browser --> apigw : HTTPS + JWT
+cf --> s3fe : origin request
+apigw --> lambdapool : invoke
+lambdapool --> dynamo_primary : read / write
+lambdapool --> s3mm : presigned URL
+lambdapool --> cw : logs
+
+dynamo_primary <--> dynamo_replica : Global Tables\nactiva-activa
+
+dynamo_primary --> s3dl : Export periódico
+s3dl --> athena : tablas externas
+athena --> dash : resultados SQL
+
+devops --> useast1 : terraform apply\n+ ansible-playbook
+devops --> uswest2 : terraform apply\n(réplica)
+
+note top of dynamo_replica
+  PRUEBA DE FALLO:
+  1. Eliminar réplica us-west-2
+  2. App continúa en us-east-1
+  3. Re-crear réplica
+end note
+
+note bottom of athena
+  5 KPIs (Examen):
+  1. Tokens prom/grupo/sesión
+  2. Tiempo medio por fase
+  3. Tasa de participación
+  4. Fase con más abandono
+  5. Ranking semanal de grupos
+end note
+
+@enduml

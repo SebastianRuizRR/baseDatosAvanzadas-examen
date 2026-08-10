@@ -27,8 +27,7 @@ Thumbs.db
 # Datos locales heredados del backend anterior (no versionar)
 db.sqlite3
 
-# Documentacion y notas locales (no versionar en repo compartido)
-Documentation/
+# Notas locales de conversaciones (no versionar en repo compartido)
 notasConversaciones/
 
 # Framework BMad (solo uso local)

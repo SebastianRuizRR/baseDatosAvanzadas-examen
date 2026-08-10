@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Diagrama de Despliegue — Misión Emprende UDD</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f8f9fa;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px;
+    }
+    h1 {
+      font-size: 20px;
+      color: #1a1a2e;
+      margin-bottom: 4px;
+      text-align: center;
+    }
+    h2 {
+      font-size: 14px;
+      font-weight: normal;
+      color: #555;
+      margin-bottom: 20px;
+    }
+    .diagram-box {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+      padding: 32px;
+      max-width: 1100px;
+      width: 100%;
+    }
+    .mermaid {
+      display: flex;
+      justify-content: center;
+    }
+    .instructions {
+      margin-top: 20px;
+      padding: 16px;
+      background: #e8f4fd;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #333;
+      max-width: 1100px;
+      width: 100%;
+    }
+    .instructions strong { color: #1a5276; }
+  </style>
+</head>
+<body>
+  <h1>Diagrama de Despliegue UML — Misión Emprende UDD</h1>
+  <h2>Bases de Datos Avanzadas · Certamen II + Examen Big Data · 2026</h2>
+
+  <div class="diagram-box">
+    <div class="mermaid">
+graph TB
+  subgraph Cliente["🌐 Cliente"]
+    B["Navegador\nHTML / CSS / JS"]
+  end
+
+  subgraph east1["☁️ AWS us-east-1 — Región Primaria"]
+    CF["☁️ CloudFront\nCDN + HTTPS"]
+    S3FE["🗄️ S3 Frontend\nHTML / CSS / JS"]
+    S3MM["🗄️ S3 Multimedia\nImágenes · Videos"]
+    APIGW["🔌 API Gateway\nHTTP API"]
+
+    subgraph Lambda["⚡ AWS Lambda Pool"]
+      LA["λ Acceso"]
+      LP["λ Profesor"]
+      LS["λ Sesiones"]
+      LF["λ Fase 1–5"]
+    end
+
+    DB1[("🟢 DynamoDB\nPrimaria\nus-east-1")]
+    CW["📊 CloudWatch\nLogs · Métricas"]
+    S3DL["🗄️ S3 Data Lake\nDynamoDB Export"]
+    ATH["🔍 AWS Athena\nSQL Analytics"]
+    DASH["📈 Dashboard\nKPIs"]
+  end
+
+  subgraph west2["☁️ AWS us-west-2 — Réplica"]
+    DB2[("🔴 DynamoDB\nRéplica\nus-west-2")]
+  end
+
+  subgraph iac["🛠️ IaC — Máquina Dev"]
+    TF["📄 main.tf\nTerraform"]
+    ANS["📄 deploy.yml\nAnsible"]
+    SAM["📄 template.yaml\nAWS SAM"]
+  end
+
+  B -->|"HTTPS"| CF
+  B -->|"HTTPS + JWT"| APIGW
+  CF --> S3FE
+  APIGW --> LA & LP & LS & LF
+  LA & LP & LS & LF --> DB1
+  LA & LP & LS & LF --> S3MM
+  LA & LP & LS & LF --> CW
+  DB1 <-->|"🔄 Global Tables\nactiva-activa"| DB2
+  DB1 -->|"Export periódico"| S3DL
+  S3DL --> ATH
+  ATH --> DASH
+  TF -->|"terraform apply"| CF & S3FE & S3MM & APIGW & DB1 & DB2 & S3DL & ATH
+  ANS -->|"sam build + deploy"| Lambda
+
+  style DB1 fill:#d5f5e3,stroke:#27ae60,color:#000
+  style DB2 fill:#fadbd8,stroke:#e74c3c,color:#000
+  style Lambda fill:#eaf2ff,stroke:#2980b9,color:#000
+  style east1 fill:#fffde7,stroke:#f9a825,color:#000
+  style west2 fill:#fce4ec,stroke:#e91e63,color:#000
+  style iac fill:#f3f3f3,stroke:#999,color:#000
+    </div>
+  </div>
+
+  <div class="instructions">
+    <strong>¿Cómo usar esta imagen en la PPT?</strong><br>
+    1. Abre este archivo en cualquier navegador (Chrome, Firefox, Edge).<br>
+    2. Espera a que el diagrama termine de renderizar.<br>
+    3. Presiona <strong>Ctrl+Shift+S</strong> (o clic derecho → "Guardar como imagen") para capturar, o usa la tecla <strong>PrintScreen</strong>.<br>
+    4. Alternativa: herramienta de captura del sistema operativo (<strong>Win+Shift+S</strong> en Windows, <strong>Cmd+Shift+4</strong> en Mac).<br>
+    5. Pega la captura directamente en la diapositiva de PowerPoint/Google Slides.<br><br>
+    <strong>Archivos fuente del diagrama:</strong><br>
+    · <code>Documentation/diagrama-despliegue.puml</code> — versión PlantUML<br>
+    · <code>Documentation/diagrama-despliegue.mmd</code> — versión Mermaid<br>
+    · <code>_bmad-output/planning-artifacts/architecture/.../ARCHITECTURE-SPINE.md</code> — arquitectura completa
+  </div>
+
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'default',
+      flowchart: {
+        curve: 'basis',
+        nodeSpacing: 50,
+        rankSpacing: 60,
+        useMaxWidth: true
+      },
+      themeVariables: {
+        primaryColor: '#eaf2ff',
+        primaryBorderColor: '#2980b9',
+        lineColor: '#555',
+        fontSize: '14px'
+      }
+    });
+  </script>
+</body>
+</html>
