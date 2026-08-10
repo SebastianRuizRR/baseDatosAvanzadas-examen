@@ -5,10 +5,15 @@ Description: Backend serverless de Mision Emprende UDD
 Parameters:
   Entorno:
     Type: String
-    Default: dev
+    Default: prod
     AllowedValues:
       - dev
       - prod
+
+  NombreTabla:
+    Type: String
+    Default: MisionEmprende-prod
+    Description: Nombre de la tabla DynamoDB creada por Terraform (Global Tables).
 
   OrigenCors:
     Type: String
@@ -43,7 +48,7 @@ Globals:
     Timeout: 15
     Environment:
       Variables:
-        NOMBRE_TABLA: !Ref TablaMision
+        NOMBRE_TABLA: !Ref NombreTabla
         CLAVE_TOKEN: !Ref ClaveToken
         CLAVE_ACCESO_PROFESOR: !Ref ClaveAccesoProfesor
         DURACION_TOKEN_SEGUNDOS: "28800"
@@ -69,44 +74,6 @@ Resources:
     Type: AWS::Serverless::HttpApi
     Properties:
       StageName: "$default"
-
-  TablaMision:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub "MisionEmprende-${Entorno}"
-      BillingMode: PAY_PER_REQUEST
-      AttributeDefinitions:
-        - AttributeName: PK
-          AttributeType: S
-        - AttributeName: SK
-          AttributeType: S
-        - AttributeName: GSI1PK
-          AttributeType: S
-        - AttributeName: GSI1SK
-          AttributeType: S
-      KeySchema:
-        - AttributeName: PK
-          KeyType: HASH
-        - AttributeName: SK
-          KeyType: RANGE
-      GlobalSecondaryIndexes:
-        - IndexName: GSI1
-          KeySchema:
-            - AttributeName: GSI1PK
-              KeyType: HASH
-            - AttributeName: GSI1SK
-              KeyType: RANGE
-          Projection:
-            ProjectionType: ALL
-      PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: false
-      SSESpecification:
-        SSEEnabled: true
-      Tags:
-        - Key: Proyecto
-          Value: MisionEmprendeUDD
-        - Key: Entorno
-          Value: !Ref Entorno
 
   FuncionAcceso:
     Type: AWS::Serverless::Function
@@ -493,9 +460,5 @@ Outputs:
     Value: !Sub "https://${ApiBackend}.execute-api.${AWS::Region}.${AWS::URLSuffix}"
 
   NombreTabla:
-    Description: Nombre de la tabla DynamoDB
-    Value: !Ref TablaMision
-
-  ArnTabla:
-    Description: ARN de la tabla DynamoDB
-    Value: !GetAtt TablaMision.Arn
+    Description: Nombre de la tabla DynamoDB (creada por Terraform)
+    Value: !Ref NombreTabla

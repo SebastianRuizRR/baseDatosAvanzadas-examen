@@ -1,0 +1,226 @@
+---
+# Playbook de despliegue — Misión Emprende UDD
+# Uso: ansible-playbook ansible/deploy.yml -e "url_api=<URL> bucket_frontend=<BUCKET>"
+#
+# Variables requeridas (pasar con -e o definir en group_vars):
+#   url_api:         URL del API Gateway (obtenida del output de Terraform/SAM)
+#   bucket_frontend: Nombre del bucket S3 del frontend (output de Terraform)
+#   id_cloudfront:   ID de la distribución CloudFront (output de Terraform)
+#
+# Variables opcionales:
+#   entorno:         "prod" (default)
+#   region:          "us-east-1" (default)
+#   clave_token:     Clave JWT para firmar tokens (default: cambiar en producción)
+#   clave_profesor:  Clave de acceso del profesor (default: profe123)
+
+- name: Despliegue de Misión Emprende UDD
+  hosts: localhost
+  gather_facts: true
+
+  vars:
+    entorno: "prod"
+    region: "us-east-1"
+    nombre_tabla: "MisionEmprende-prod"
+    clave_token: "cambiar-antes-de-produccion"
+    clave_profesor: "profe123"
+    directorio_backend: "{{ playbook_dir }}/../backend-serverless"
+    directorio_frontend: "{{ playbook_dir }}/../frontend"
+
+  tasks:
+    # ──────────────────────────────────────────────────────────────
+    # 1. Verificar prerequisitos
+    # ──────────────────────────────────────────────────────────────
+    - name: Verificar que Node.js está instalado
+      command: node --version
+      register: node_version
+      changed_when: false
+
+    - name: Mostrar versión de Node.js
+      debug:
+        msg: "Node.js: {{ node_version.stdout }}"
+
+    - name: Verificar que AWS SAM CLI está instalado
+      command: sam --version
+      register: sam_version
+      changed_when: false
+
+    - name: Mostrar versión de SAM
+      debug:
+        msg: "AWS SAM: {{ sam_version.stdout }}"
+
+    - name: Verificar que AWS CLI está configurado
+      command: aws sts get-caller-identity --region "{{ region }}"
+      register: aws_identity
+      changed_when: false
+
+    - name: Mostrar identidad AWS
+      debug:
+        msg: "Cuenta AWS: {{ aws_identity.stdout }}"
+
+    # ──────────────────────────────────────────────────────────────
+    # 2. Construir backend (SAM build)
+    # ──────────────────────────────────────────────────────────────
+    - name: Instalar dependencias Node.js del backend
+      command: npm ci
+      args:
+        chdir: "{{ directorio_backend }}"
+      changed_when: true
+
+    - name: Construir Lambdas con SAM (sam build)
+      command: npm run sam:build
+      args:
+        chdir: "{{ directorio_backend }}"
+      register: sam_build_result
+      changed_when: true
+
+    - name: Mostrar resultado de sam build
+      debug:
+        msg: "{{ sam_build_result.stdout_lines[-3:] }}"
+
+    # ──────────────────────────────────────────────────────────────
+    # 3. Desplegar backend en AWS (SAM deploy)
+    # ──────────────────────────────────────────────────────────────
+    - name: Desplegar backend con SAM (sam deploy)
+      command: >
+        sam deploy
+        --stack-name mision-emprende-{{ entorno }}
+        --region {{ region }}
+        --capabilities CAPABILITY_IAM
+        --resolve-s3
+        --no-confirm-changeset
+        --parameter-overrides
+          "Entorno={{ entorno }}"
+          "NombreTabla={{ nombre_tabla }}"
+          "ClaveToken={{ clave_token }}"
+          "ClaveAccesoProfesor={{ clave_profesor }}"
+          "OrigenCors={{ origen_cors | default('*') }}"
+      args:
+        chdir: "{{ directorio_backend }}"
+      register: sam_deploy_result
+      changed_when: true
+
+    - name: Mostrar resultado de sam deploy
+      debug:
+        msg: "{{ sam_deploy_result.stdout_lines[-10:] }}"
+
+    # ──────────────────────────────────────────────────────────────
+    # 4. Obtener URL de API Gateway desde los outputs de CloudFormation
+    # ──────────────────────────────────────────────────────────────
+    - name: Obtener outputs del stack CloudFormation
+      command: >
+        aws cloudformation describe-stacks
+        --stack-name mision-emprende-{{ entorno }}
+        --region {{ region }}
+        --query "Stacks[0].Outputs"
+        --output json
+      register: cf_outputs
+      changed_when: false
+
+    - name: Extraer URL de API Gateway
+      set_fact:
+        url_api_gateway: >-
+          {{ (cf_outputs.stdout | from_json
+              | selectattr('OutputKey', 'equalto', 'UrlApi')
+              | list | first).OutputValue }}
+      when: url_api is not defined
+
+    - name: Usar URL de API provista manualmente
+      set_fact:
+        url_api_gateway: "{{ url_api }}"
+      when: url_api is defined
+
+    - name: Mostrar URL de API Gateway
+      debug:
+        msg: "API Gateway URL: {{ url_api_gateway }}"
+
+    # ──────────────────────────────────────────────────────────────
+    # 5. Actualizar configuración del frontend con la URL real
+    # ──────────────────────────────────────────────────────────────
+    - name: Actualizar URL de API en el frontend
+      lineinfile:
+        path: "{{ directorio_frontend }}/compartido/js/api.js"
+        regexp: "^(const|let|var)\\s+API_URL\\s*="
+        line: "const API_URL = '{{ url_api_gateway }}';"
+        create: false
+      ignore_errors: true
+
+    - name: Verificar si existe api.js en compartido
+      stat:
+        path: "{{ directorio_frontend }}/compartido/js/api.js"
+      register: api_js
+
+    - name: Advertencia si api.js no existe
+      debug:
+        msg: >
+          ADVERTENCIA: No se encontró frontend/compartido/api.js.
+          Actualiza manualmente la URL de API: {{ url_api_gateway }}
+      when: not api_js.stat.exists
+
+    # ──────────────────────────────────────────────────────────────
+    # 6. Subir frontend a S3
+    # ──────────────────────────────────────────────────────────────
+    - name: Sincronizar frontend con S3
+      command: >
+        aws s3 sync {{ directorio_frontend }}/
+        s3://{{ bucket_frontend }}/
+        --region {{ region }}
+        --delete
+        --exclude "*.DS_Store"
+        --exclude "node_modules/*"
+      register: s3_sync_result
+      changed_when: true
+
+    - name: Mostrar archivos subidos
+      debug:
+        msg: "{{ s3_sync_result.stdout_lines[-5:] }}"
+
+    # ──────────────────────────────────────────────────────────────
+    # 7. Invalidar caché de CloudFront
+    # ──────────────────────────────────────────────────────────────
+    - name: Invalidar caché de CloudFront
+      command: >
+        aws cloudfront create-invalidation
+        --distribution-id {{ id_cloudfront }}
+        --paths "/*"
+        --region us-east-1
+      register: cf_invalidation
+      changed_when: true
+      when: id_cloudfront is defined
+
+    # ──────────────────────────────────────────────────────────────
+    # 8. Verificación final
+    # ──────────────────────────────────────────────────────────────
+    - name: Verificar que el endpoint de API Gateway responde
+      uri:
+        url: "{{ url_api_gateway }}/api/sesiones/actual"
+        method: GET
+        status_code: [200, 401, 403]
+        timeout: 15
+      register: api_check
+      ignore_errors: true
+
+    - name: Resultado de verificación de API
+      debug:
+        msg: >-
+          API status: {{ api_check.status | default('Sin respuesta') }}.
+          {% if api_check.status in [200, 401, 403] %}
+          ✓ API responde correctamente.
+          {% else %}
+          ✗ La API no responde. Verificar despliegue.
+          {% endif %}
+
+    # ──────────────────────────────────────────────────────────────
+    # 9. Resumen final
+    # ──────────────────────────────────────────────────────────────
+    - name: Resumen del despliegue
+      debug:
+        msg:
+          - "══════════════════════════════════════════════"
+          - " Despliegue completado — Misión Emprende UDD"
+          - "══════════════════════════════════════════════"
+          - " Entorno   : {{ entorno }}"
+          - " Región    : {{ region }}"
+          - " Tabla DB  : {{ nombre_tabla }}"
+          - " API URL   : {{ url_api_gateway }}"
+          - " Frontend  : https://{{ id_cloudfront | default('(sin CloudFront ID)') }}.cloudfront.net"
+          - "══════════════════════════════════════════════"

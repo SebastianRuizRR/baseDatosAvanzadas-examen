@@ -1,13 +1,13 @@
 version = 0.1
 
 [default.deploy.parameters]
-stack_name = "mision-emprende-dev"
+stack_name = "mision-emprende-prod"
 resolve_s3 = true
-s3_prefix = "mision-emprende-dev"
+s3_prefix = "mision-emprende-prod"
 region = "us-east-1"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Entorno=\"dev\" OrigenCors=\"*\""
+parameter_overrides = "Entorno=\"prod\" NombreTabla=\"MisionEmprende-prod\" OrigenCors=\"*\""
 image_repositories = []
 
 [default.global.parameters]

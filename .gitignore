@@ -26,3 +26,23 @@ Thumbs.db
 
 # Datos locales heredados del backend anterior (no versionar)
 db.sqlite3
+
+# Documentacion y notas locales (no versionar en repo compartido)
+Documentation/
+notasConversaciones/
+
+# Framework BMad (solo uso local)
+_bmad/
+_bmad-output/
+
+# Claude Code (configuracion personal)
+.claude/
+
+# Terraform — estado e infraestructura efimera
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup
+
+# Archivos temporales
+datos.txt
