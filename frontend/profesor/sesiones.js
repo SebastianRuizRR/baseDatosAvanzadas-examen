@@ -72,15 +72,26 @@ if (exigirAccesoProfesor()) {
                 ${sesion.fase}
               </td>
 
-              <td data-label="Control">
-                <a
-                  class="btn-primary"
-                  href="control-sesion.html?id=${encodeURIComponent(
-                    sesion.sesionId,
-                  )}"
-                >
-                  Controlar
-                </a>
+              <td data-label="Acciones">
+                <div class="acciones-sesion">
+                  <a
+                    class="btn-primary"
+                    href="control-sesion.html?id=${encodeURIComponent(
+                      sesion.sesionId,
+                    )}"
+                  >
+                    Controlar
+                  </a>
+
+                  <a
+                    class="btn-kpis"
+                    href="dashboard-kpis.html?id=${encodeURIComponent(
+                      sesion.sesionId,
+                    )}"
+                  >
+                    Ver KPIs
+                  </a>
+                </div>
               </td>
             </tr>
           `,

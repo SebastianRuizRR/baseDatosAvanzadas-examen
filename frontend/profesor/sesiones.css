@@ -120,3 +120,30 @@
     font-weight: 700;
   }
 }
+
+.acciones-sesion {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+.btn-kpis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 18px;
+  color: #dbeafe;
+  background: #334155;
+  border: 1px solid #64748b;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  transition: 0.18s ease;
+}
+
+.btn-kpis:hover {
+  background: #475569;
+  transform: translateY(-1px);
+}
