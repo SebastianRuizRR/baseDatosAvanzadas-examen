@@ -251,3 +251,38 @@ if (exigirAccesoProfesor()) {
     }
   }
 }
+
+async function cargarUltimaActualizacion() {
+  const elemento =
+    document.getElementById("ultimaActualizacion");
+
+  if (!elemento) return;
+
+  try {
+    const respuesta = await fetch(
+      `../datos/ultima-actualizacion.json?t=${Date.now()}`,
+      { cache: "no-store" },
+    );
+
+    if (!respuesta.ok) {
+      throw new Error("Sin registro");
+    }
+
+    const datos = await respuesta.json();
+
+    const fecha = new Date(datos.actualizadoEn);
+
+    elemento.textContent =
+      `Última actualización del Data Lake: ${
+        fecha.toLocaleString("es-CL", {
+          dateStyle: "short",
+          timeStyle: "short",
+        })
+      }`;
+  } catch {
+    elemento.textContent =
+      "Última actualización del Data Lake: sin información";
+  }
+}
+
+cargarUltimaActualizacion();

@@ -167,3 +167,25 @@ echo "========================================"
 echo " ✅ Data Lake actualizado"
 echo " Registros disponibles en Athena: $TOTAL"
 echo "========================================"
+
+echo ""
+echo "Publicando fecha de actualización..."
+
+BUCKET_FRONTEND=$(terraform output -raw nombre_bucket_frontend)
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+cat > /tmp/ultima-actualizacion.json <<JSON
+{
+  "actualizadoEn": "$TIMESTAMP"
+}
+JSON
+
+aws s3 cp \
+  /tmp/ultima-actualizacion.json \
+  "s3://${BUCKET_FRONTEND}/datos/ultima-actualizacion.json" \
+  --content-type "application/json" \
+  --cache-control "no-cache, no-store, must-revalidate" \
+  --region "$REGION" \
+  --no-cli-pager
+
+echo "✅ Fecha de actualización publicada"

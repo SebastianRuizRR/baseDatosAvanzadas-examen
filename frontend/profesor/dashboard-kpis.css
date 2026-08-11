@@ -226,3 +226,10 @@
     min-height: 130px;
   }
 }
+
+.ultima-actualizacion {
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 500;
+}
