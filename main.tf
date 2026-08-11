@@ -21,6 +21,8 @@ provider "aws" {
   region = var.region_replica
 }
 
+data "aws_caller_identity" "actual" {}
+
 # ── Variables ────────────────────────────────────────────────────────────────
 variable "entorno" {
   description = "Entorno de despliegue"
@@ -47,7 +49,7 @@ variable "nombre_tabla" {
 }
 
 locals {
-  prefijo = "mision-emprende-${var.entorno}"
+  prefijo = "mision-emprende-${var.entorno}-${data.aws_caller_identity.actual.account_id}"
   tags = {
     Proyecto = "MisionEmprendeUDD"
     Entorno  = var.entorno

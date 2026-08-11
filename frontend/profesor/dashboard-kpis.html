@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+
+  <title>Misión Emprende UDD — KPIs</title>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+  <link rel="stylesheet" href="dashboard-kpis.css">
+</head>
+
+<body>
+  <div class="dashboard">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <h2 class="sidebar-title">
+          Dashboard Profesor
+        </h2>
+      </div>
+
+      <nav class="sidebar-nav">
+        <ul>
+          <li><a href="index.html">Inicio</a></li>
+          <li><a href="crear-sesion.html">Crear sesión</a></li>
+          <li><a href="sesiones.html">Ver sesiones</a></li>
+          <li>
+            <a class="active" href="#">
+              Analítica
+            </a>
+          </li>
+
+          <li class="sidebar-separator"></li>
+
+          <li>
+            <a href="#" class="back-link" id="cerrarProfesor">
+              ⟵ Cambiar de perfil
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <div class="cabecera-kpis">
+        <div>
+          <a href="sesiones.html" class="volver">
+            ← Volver a sesiones
+          </a>
+
+          <h1 class="title">
+            Analítica de la sesión
+          </h1>
+
+          <p class="subtitle" id="subtituloSesion">
+            Consultando Amazon Athena...
+          </p>
+
+          <p class="ultima-actualizacion" id="ultimaActualizacion">
+            Última actualización del Data Lake: —
+          </p>
+        </div>
+
+        <div class="badge-athena">
+          Amazon Athena
+        </div>
+      </div>
+
+      <div id="mensaje" class="mensaje"></div>
+
+      <section id="contenidoKpis" hidden>
+        <div class="grid-kpis">
+          <article class="kpi-card">
+            <span class="kpi-label">Alumnos</span>
+            <strong id="totalAlumnos" class="kpi-value">—</strong>
+            <span class="kpi-detail">Participantes registrados</span>
+          </article>
+
+          <article class="kpi-card">
+            <span class="kpi-label">Grupos</span>
+            <strong id="totalGrupos" class="kpi-value">—</strong>
+            <span class="kpi-detail">Equipos de la sesión</span>
+          </article>
+
+          <article class="kpi-card">
+            <span class="kpi-label">Tokens promedio</span>
+            <strong id="promedioTokens" class="kpi-value">—</strong>
+            <span class="kpi-detail">Rendimiento de gamificación</span>
+          </article>
+
+          <article class="kpi-card">
+            <span class="kpi-label">Sopa completada</span>
+            <strong id="porcentajeSopa" class="kpi-value">—</strong>
+            <span class="kpi-detail">Porcentaje de grupos</span>
+          </article>
+
+          <article class="kpi-card">
+            <span class="kpi-label">Tiempo promedio sopa</span>
+            <strong id="tiempoSopa" class="kpi-value">—</strong>
+            <span class="kpi-detail">Tiempo de resolución</span>
+          </article>
+
+          <article class="kpi-card">
+            <span class="kpi-label">LEGO completado</span>
+            <strong id="porcentajeLego" class="kpi-value">—</strong>
+            <span class="kpi-detail">Porcentaje de grupos</span>
+          </article>
+
+          <article class="kpi-card">
+            <span class="kpi-label">Acierto astronauta</span>
+            <strong id="porcentajeAstronauta" class="kpi-value">—</strong>
+            <span class="kpi-detail">Respuestas correctas</span>
+          </article>
+
+          <article class="kpi-card">
+            <span class="kpi-label">Evaluación Peer</span>
+            <strong id="promedioPeer" class="kpi-value">—</strong>
+            <span id="totalEvaluaciones" class="kpi-detail">
+              Sin evaluaciones
+            </span>
+          </article>
+        </div>
+
+        <div class="grid-paneles">
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <span class="eyebrow">Desempeño</span>
+                <h2>Avance de actividades</h2>
+              </div>
+            </div>
+
+            <div class="progreso-item">
+              <div class="progreso-info">
+                <span>Sopa de letras</span>
+                <strong id="valorBarraSopa">0%</strong>
+              </div>
+
+              <div class="barra">
+                <div
+                  id="barraSopa"
+                  class="barra-fill"
+                  style="width: 0%"
+                ></div>
+              </div>
+            </div>
+
+            <div class="progreso-item">
+              <div class="progreso-info">
+                <span>Actividad LEGO</span>
+                <strong id="valorBarraLego">0%</strong>
+              </div>
+
+              <div class="barra">
+                <div
+                  id="barraLego"
+                  class="barra-fill"
+                  style="width: 0%"
+                ></div>
+              </div>
+            </div>
+
+            <div class="progreso-item">
+              <div class="progreso-info">
+                <span>Desafío astronauta</span>
+                <strong id="valorBarraAstronauta">Sin datos</strong>
+              </div>
+
+              <div class="barra">
+                <div
+                  id="barraAstronauta"
+                  class="barra-fill"
+                  style="width: 0%"
+                ></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <span class="eyebrow">Evaluación Peer</span>
+                <h2>Competencias evaluadas</h2>
+              </div>
+            </div>
+
+            <div id="criteriosPeer" class="criterios"></div>
+          </section>
+        </div>
+
+        <section class="panel decisiones">
+          <div class="panel-header">
+            <div>
+              <span class="eyebrow">Interpretación</span>
+              <h2>Decisiones que apoyan estos indicadores</h2>
+            </div>
+          </div>
+
+          <div class="decisiones-grid">
+            <div>
+              <strong>Tiempo de sopa</strong>
+              <p>
+                Permite evaluar si la dificultad y duración
+                de la actividad son adecuadas.
+              </p>
+            </div>
+
+            <div>
+              <strong>Tokens y avance</strong>
+              <p>
+                Permiten detectar diferencias de desempeño
+                entre las etapas del juego.
+              </p>
+            </div>
+
+            <div>
+              <strong>Evaluación Peer</strong>
+              <p>
+                Permite identificar las competencias que
+                requieren mayor refuerzo.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <div class="origen-datos">
+          <strong>Origen analítico:</strong>
+          DynamoDB → Amazon S3 Data Lake → Amazon Athena → Lambda Analytics
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="../compartido/js/api.js"></script>
+  <script src="comun.js"></script>
+  <script src="dashboard-kpis.js"></script>
+</body>
+</html>
