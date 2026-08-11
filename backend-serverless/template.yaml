@@ -454,6 +454,37 @@ Resources:
         Platform: node
         Format: cjs
 
+
+  FuncionAnalytics:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src/analytics/api.manejador
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+      Timeout: 30
+      Environment:
+        Variables:
+          ATHENA_DATABASE: "mision_emprende_db"
+          ATHENA_WORKGROUP: !Sub "mision-emprende-${Entorno}-${AWS::AccountId}-workgroup"
+      Events:
+        ObtenerKpis:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ApiBackend
+            Path: /api/analytics/kpis/{sesionId}
+            Method: GET
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - src/analytics/api.ts
+        Bundle: true
+        Minify: false
+        Sourcemap: true
+        Target: es2022
+        Platform: node
+        Format: cjs
+
 Outputs:
   UrlApi:
     Description: URL publica de API Gateway
