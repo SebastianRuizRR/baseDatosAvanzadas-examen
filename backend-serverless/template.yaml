@@ -39,6 +39,24 @@ Parameters:
       Endpoint de DynamoDB local (solo para sam local). Vacío en AWS real,
       donde el SDK usa el endpoint real de DynamoDB automáticamente.
 
+  RegionDynamoPrincipal:
+    Type: String
+    Default: us-east-1
+    Description: Region DynamoDB utilizada como principal por el backend.
+
+  RegionDynamoRespaldo:
+    Type: String
+    Default: us-west-2
+    Description: Region DynamoDB utilizada para failover.
+
+  SimularFalloDynamoPrincipal:
+    Type: String
+    Default: "false"
+    AllowedValues:
+      - "true"
+      - "false"
+    Description: Simula indisponibilidad de la replica DynamoDB principal.
+
 Globals:
   Function:
     Runtime: nodejs22.x
@@ -55,6 +73,9 @@ Globals:
         ORIGEN_CORS: !Ref OrigenCors
         ENTORNO: !Ref Entorno
         DYNAMODB_ENDPOINT: !Ref DynamoDbEndpointLocal
+        DYNAMODB_REGION_PRINCIPAL: !Ref RegionDynamoPrincipal
+        DYNAMODB_REGION_RESPALDO: !Ref RegionDynamoRespaldo
+        SIMULAR_FALLO_DYNAMODB_PRINCIPAL: !Ref SimularFalloDynamoPrincipal
 
   HttpApi:
     CorsConfiguration:
