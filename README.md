@@ -70,27 +70,7 @@ IaC: Terraform (infraestructura) + Ansible (build & deploy)
 │   ├── juego/                     # Fases del juego (alumno)
 │   ├── profesor/                  # Panel del profesor
 │   └── compartido/js/api.js       # URL del API Gateway (actualizada por Ansible)
-└── Documentation/                 # Ver sección más abajo
 ```
-
----
-
-## Documentation/
-
-Contiene todos los artefactos de documentación del proyecto:
-
-| Archivo | Descripción |
-|---|---|
-| `001-GuiaArquitecturaV1.md` | Guía detallada de la arquitectura técnica |
-| `costos-certamen-ii.md` | Análisis de costos y factibilidad económica |
-| `diagrama-despliegue.png` | Diagrama de despliegue (imagen, usar en PPT) |
-| `diagrama-despliegue.html` | Diagrama de despliegue interactivo (abrir en browser) |
-| `diagrama-despliegue.mmd` | Fuente Mermaid del diagrama |
-| `diagrama-despliegue.puml` | Fuente PlantUML del diagrama |
-| `rubrica_oficial_certamen_II_examen.md` | Rúbrica oficial del certamen y examen |
-| `presentacion-certamen-ii/` | Archivos de la presentación |
-
----
 
 ## Prerrequisitos
 
